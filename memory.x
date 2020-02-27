@@ -1,4 +1,8 @@
-/* Linker script for the STM32F303VCT6 */
+/*
+ * Linker script for the STM32F303VCT6. 
+ * These definitions below tell Rust where to put the code,
+ * and provide the length and location of each memory type.
+ */
 MEMORY
 {
   CCRAM : ORIGIN = 0x10000000, LENGTH = 8K
