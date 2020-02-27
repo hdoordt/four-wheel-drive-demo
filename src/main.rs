@@ -6,11 +6,14 @@
 use cortex_m_rt::entry;
 
 use core::convert::Infallible;
-use embedded_hal::digital::v2::OutputPin;
-use stm32f30x_hal::prelude::*;
-use stm32f30x_hal::time::MegaHertz;
+
 
 const PCA_I2C_ADDR:u8 = 0x80;
+// Import the embedded_hal trait implementations for the STM32F303.
+use stm32f3xx_hal::prelude::*;
+use stm32f3xx_hal::time::MegaHertz;
+use stm32f3xx_hal::hal::digital::v2::OutputPin;
+
 
 // A panic handler is run when the application encounters an error
 // it cannot recover from. The handler defines what it should do
@@ -39,7 +42,7 @@ fn busy_wait(ms: u32) {
     }
 }
 
-fn blink_led(led: &mut impl OutputPin<Error = Infallible>, times: u16) -> Result<(), Infallible> {
+fn blink_led(led: &mut impl OutputPin<Error = ()>, times: u16) -> Result<(), ()> {
     for _ in 0..times {
         led.set_high()?;
         busy_wait(100);
@@ -52,8 +55,8 @@ fn blink_led(led: &mut impl OutputPin<Error = Infallible>, times: u16) -> Result
 // This is the main function, or entrypoint of our applicaton.
 #[entry]
 fn main() -> ! {
-    // Get a handle to the peripherals
-    let peripherals = stm32f30x::Peripherals::take().unwrap();
+    // Get a handle to the peripherals.
+    let peripherals = stm32f3xx_hal::stm32::Peripherals::take().unwrap();
 
     // Reset and clock control register
     let mut rcc = peripherals.RCC.constrain();
@@ -91,7 +94,7 @@ fn main() -> ! {
 
     let scl = gpiob.pb6.into_af4(&mut gpiob.moder, &mut gpiob.afrl);
     let sda = gpiob.pb7.into_af4(&mut gpiob.moder, &mut gpiob.afrl);
-    let mut i2c1 = stm32f30x_hal::i2c::I2c::i2c1(
+    let mut i2c1 = stm32f3xx_hal::i2c::I2c::i2c1(
         peripherals.I2C1,
         (scl, sda),
         MegaHertz(1),

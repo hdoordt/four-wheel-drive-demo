@@ -2,12 +2,6 @@
 # It is not intended for manual editing.
 [[package]]
 name = "aligned"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d39da9b88ae1a81c03c9c082b8db83f1d0e93914126041962af61034ab44c4a5"
-
-[[package]]
-name = "aligned"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb1ce8b3382016136ab1d31a1b5ce807144f8b7eb2d5f16b2108f0f07edceb94"
@@ -46,23 +40,11 @@ dependencies = [
 
 [[package]]
 name = "cortex-m"
-version = "0.5.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c0b159a1e8306949579de3698c841dba58058197b65c60807194e4fa1e7a554"
-dependencies = [
- "aligned 0.2.0",
- "bare-metal",
- "cortex-m 0.6.2",
- "volatile-register",
-]
-
-[[package]]
-name = "cortex-m"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2954942fbbdd49996704e6f048ce57567c3e1a4e2dc59b41ae9fde06a01fc763"
 dependencies = [
- "aligned 0.3.2",
+ "aligned",
  "bare-metal",
  "volatile-register",
 ]
@@ -89,6 +71,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cortex-m-semihosting"
+version = "0.3.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "113ef0ecffee2b62b58f9380f4469099b30e9f9cbee2804771b4203ba1762cfa"
+dependencies = [
+ "cortex-m",
+]
+
+[[package]]
 name = "embedded-hal"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -102,10 +93,10 @@ dependencies = [
 name = "four-wd-demo"
 version = "0.1.0"
 dependencies = [
- "cortex-m 0.6.2",
+ "cortex-m",
  "cortex-m-rt",
+ "cortex-m-semihosting",
  "embedded-hal",
- "stm32f30x",
  "stm32f3xx-hal",
 ]
 
@@ -193,7 +184,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70d13eca735cae37df697f599777b000cc0ee924df8452f2b4bfaa6798ab0338"
 dependencies = [
- "cortex-m 0.6.2",
+ "cortex-m",
  "usb-device",
  "vcell",
 ]
@@ -205,18 +196,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8796d066c1bc4fe53cdff215fd3bd90e956520698c34c2bb674f87fe400f2fe8"
 dependencies = [
  "bare-metal",
- "cortex-m 0.6.2",
- "vcell",
-]
-
-[[package]]
-name = "stm32f30x"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "768a41ff0d50acf0c0d82f7fd7ef73260c409941edb10a29d88d7be2bdb44b9f"
-dependencies = [
- "bare-metal",
- "cortex-m 0.5.10",
+ "cortex-m",
  "vcell",
 ]
 
@@ -228,7 +208,7 @@ checksum = "9cba268d4070e654f4e10f35d0cf27e8be5497ebef9a924d8ab8dae1e42d33b6"
 dependencies = [
  "bare-metal",
  "cast",
- "cortex-m 0.6.2",
+ "cortex-m",
  "cortex-m-rt",
  "embedded-hal",
  "nb",
