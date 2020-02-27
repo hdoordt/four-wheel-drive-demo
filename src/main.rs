@@ -5,10 +5,10 @@
 // Import a directive which marks the entrypoint of the application.
 use cortex_m_rt::entry;
 
-// Import the embedded_hal trait implementations for the STM32F30x.
-use stm32f30x_hal::prelude::*;
+// Import the embedded_hal trait implementations for the STM32F303.
+use stm32f3xx_hal::prelude::*;
+
 // We need to explicitly import the v2 OutputPin trait.
-use embedded_hal::digital::v2::OutputPin;
 // No means No-Op. It's an operation which does nothing.
 // We use it in the busy waiting loops to notify Rust that it
 // should not optimize these loops out.
@@ -29,7 +29,7 @@ unsafe fn panic_handler(_info: &core::panic::PanicInfo) -> ! {
 fn main() -> ! {
     // Get a handle to the peripherals. Safe Rust allows only a single instance
     // of this handle. That way, accidental concurrent access is avoided.
-    let peripherals = stm32f30x::Peripherals::take().unwrap();
+    let peripherals = stm32f3xx_hal::stm32::Peripherals::take().unwrap();
 
     // Reset and clock control register. Among other things, this register
     // is for enabling the General Purpose Input/Output peripherals.
