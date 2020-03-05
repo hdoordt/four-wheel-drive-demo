@@ -8,10 +8,12 @@ use cortex_m_rt::entry;
 // Import the embedded_hal trait implementations for the STM32F303.
 use stm32f3xx_hal::prelude::*;
 
-// We need to explicitly import the v2 OutputPin trait.
-// No means No-Op. It's an operation which does nothing.
+
+
+// NOP means No-Op. It's an operation which does nothing.
 // We use it in the busy waiting loops to notify Rust that it
-// should not optimize these loops out.
+// should not optimize these loops out, as we actually don't want
+// to do anything for a while.
 use cortex_m::asm::nop;
 
 // A panic handler is run when the application encounters an error
@@ -43,9 +45,13 @@ fn main() -> ! {
     // so we can configure each of them independently.
     let mut gpioe = peripherals.GPIOE.split(&mut rcc.ahb);
     
+    
     // The Northern LED is connected to pin pe9. To use it four our purpose,
-    // we configure it to a push-pull output.
-    let mut led = gpioe
+    // we need to configure it to a push-pull output.
+    // Import the parts of the type that describe pin pe9 when it's in
+    // push-pull output mode.
+    use stm32f3xx_hal::gpio::{gpioe, Output, PushPull};
+    let mut led: gpioe::PE9<Output<PushPull>> = gpioe
         .pe9
         .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     
