@@ -126,22 +126,25 @@ impl Leds {
 }
 
 pub struct Dial {
-    leds: Leds
+    leds: Leds,
 }
 
 impl Dial {
     pub fn new(leds: Leds) -> Self {
         Self { leds }
-    } 
+    }
 
-    pub fn reset(&mut self ) -> Result<(), ()> {
+    pub fn reset(&mut self) -> Result<(), ()> {
         self.leds.set_all_low()
     }
 
     pub fn set_magnitude(&mut self, mag: usize) -> Result<(), ()> {
         debug_assert!(mag <= 8);
         self.reset()?;
-        Led::all().iter().take(mag).try_for_each(|l| self.leds.set_high(*l))
+        Led::all()
+            .iter()
+            .take(mag)
+            .try_for_each(|l| self.leds.set_high(*l))
     }
 }
 

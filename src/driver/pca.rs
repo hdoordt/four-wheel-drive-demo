@@ -4,7 +4,8 @@ use embedded_hal::blocking::i2c::{Write, WriteRead};
 pub const PCA_I2C_ADDR: u8 = 0b1000000;
 
 #[allow(non_camel_case_types)]
-pub struct PCA9685<TI2C: Write + WriteRead> {
+#[derive(Clone)]
+pub struct PCA9685<TI2C> {
     phantom: PhantomData<TI2C>,
 }
 
@@ -32,19 +33,31 @@ pub enum Led {
 
 impl<TI2C: Write + WriteRead> PCA9685<TI2C> {
     pub fn init(i2c: &mut TI2C) -> Result<Self, <TI2C as Write>::Error> {
-        i2c.write(PCA_I2C_ADDR, &[register::MODE1, 0b00100001]);
-
+        i2c.write(PCA_I2C_ADDR, &[register::MODE1, 0b00100001])?;
 
         Ok(Self {
-            phantom: PhantomData
+            phantom: PhantomData,
         })
     }
 
-    pub fn set_multple_pwm(&mut self, i2c: &mut TI2C, leds: &[Led], on: u16, off: u16) -> Result<(), <TI2C as Write>::Error> {
-        leds.iter().try_for_each(|led| self.set_pwm(i2c, *led, on, off))
+    pub fn set_multple_pwm(
+        &mut self,
+        i2c: &mut TI2C,
+        leds: &[Led],
+        on: u16,
+        off: u16,
+    ) -> Result<(), <TI2C as Write>::Error> {
+        leds.iter()
+            .try_for_each(|led| self.set_pwm(i2c, led, on, off))
     }
 
-    pub fn set_pwm(&mut self, i2c: &mut TI2C, led: Led, on: u16, off: u16) -> Result<(), <TI2C as Write>::Error> {
+    pub fn set_pwm(
+        &mut self,
+        i2c: &mut TI2C,
+        led: &Led,
+        on: u16,
+        off: u16,
+    ) -> Result<(), <TI2C as Write>::Error> {
         debug_assert!(off < 0x0FFF);
         debug_assert!(on < 0x0FFF);
 
@@ -52,11 +65,12 @@ impl<TI2C: Write + WriteRead> PCA9685<TI2C> {
         let on_h = (off >> 8) as u8;
         let off_l = on as u8;
         let off_h = (on >> 8) as u8;
-        
-        i2c.write(PCA_I2C_ADDR, &[led as u8, on_l, on_h, off_l, off_h])
+
+        i2c.write(PCA_I2C_ADDR, &[*led as u8, on_l, on_h, off_l, off_h])
     }
 }
 
+#[allow(dead_code)]
 pub mod register {
     pub const MODE1: u8 = 0x00;
     pub const MODE2: u8 = 0x01;
@@ -153,5 +167,5 @@ pub mod register {
     pub const ALL_LED_OFF_H: u8 = 0xFD;
 
     pub const PRE_SCALE: u8 = 0xFE;
-    pub const TestMode: u8 = 0xFF;
+    pub const TEST_MODE: u8 = 0xFF;
 }

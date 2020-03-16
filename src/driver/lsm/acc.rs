@@ -11,6 +11,7 @@ pub struct LSM303LDHC_ACC<TI2C: WriteRead + Write> {
 
 #[derive(Clone, Debug)]
 #[repr(u8)]
+#[allow(dead_code)]
 pub enum DataRate {
     PowerDown = 0b0000 << 4,
     Rate1hz = 0b0001 << 4,
@@ -33,9 +34,11 @@ impl<TI2C: WriteRead + Write> LSM303LDHC_ACC<TI2C> {
     pub fn init(i2c: &mut TI2C, data_rate: DataRate) -> Result<Self, <TI2C as Write>::Error> {
         // set data rate (table 20)
         // Optionally set low-power mode, z, y , x axes enamble
-        
 
-        i2c.write(LSM_ACC_I2C_ADDR, &[register::CTRL_REG1_A, data_rate as u8 | 0b0111])?;
+        i2c.write(
+            LSM_ACC_I2C_ADDR,
+            &[register::CTRL_REG1_A, data_rate as u8 | 0b0111],
+        )?;
 
         Ok(Self {
             phantom: PhantomData,
@@ -55,6 +58,7 @@ impl<TI2C: WriteRead + Write> LSM303LDHC_ACC<TI2C> {
     }
 }
 
+#[allow(dead_code)]
 pub mod register {
     pub const CTRL_REG1_A: u8 = 0x20;
     pub const CTRL_REG2_A: u8 = 0x21;

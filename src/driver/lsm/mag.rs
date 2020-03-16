@@ -11,6 +11,7 @@ pub struct LSM303LDHC_MAG<TI2C> {
 
 #[derive(Clone, Debug)]
 #[repr(u8)]
+#[allow(dead_code)]
 pub enum DataRate {
     Rate0_75hz = 0b000 << 2,
     Rate1_5Hz = 0b001 << 2,
@@ -35,7 +36,10 @@ pub struct TempData(pub i16);
 impl<TI2C: WriteRead + Write> LSM303LDHC_MAG<TI2C> {
     pub fn init(i2c: &mut TI2C, data_rate: DataRate) -> Result<Self, <TI2C as Write>::Error> {
         i2c.write(LSM_MAG_I2C_ADDR, &[register::MR_REG_M, 0x00])?;
-        i2c.write(LSM_MAG_I2C_ADDR, &[register::CRA_REG_M, data_rate as u8 | 0x80])?;
+        i2c.write(
+            LSM_MAG_I2C_ADDR,
+            &[register::CRA_REG_M, data_rate as u8 | 0x80],
+        )?;
         Ok(Self {
             phantom: PhantomData,
         })
@@ -59,11 +63,12 @@ impl<TI2C: WriteRead + Write> LSM303LDHC_MAG<TI2C> {
         Ok(MagData { x, y, z })
     }
 
-    pub fn read_temp(&mut self, i2c: &mut TI2C) -> Result<TempData, <TI2C as WriteRead>::Error> {
+    pub fn read_temp(&mut self, _i2c: &mut TI2C) -> Result<TempData, <TI2C as WriteRead>::Error> {
         todo!()
     }
 }
 
+#[allow(dead_code)]
 pub mod register {
     pub const CRA_REG_M: u8 = 0x00;
     pub const CRB_REG_M: u8 = 0x01;
