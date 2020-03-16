@@ -87,18 +87,28 @@ fn main() -> ! {
         &mut rcc.apb1,
     );
 
-    // let mut mag = lsm::mag::LSM303LDHC_MAG::init(&mut i2c1).unwrap();
-    let mut acc = lsm::acc::LSM303LDHC_ACC::init(&mut i2c1, lsm::acc::DataRate::Rate400Hz).unwrap();
+    // let mut mag = lsm::mag::LSM303LDHC_MAG::init(&mut i2c1, lsm::mag::DataRate::Rate220Hz).unwrap();
+    // let mut acc = lsm::acc::LSM303LDHC_ACC::init(&mut i2c1, lsm::acc::DataRate::Rate400Hz).unwrap();
+    let mut pca = pca::PCA9685::init(&mut i2c1).unwrap();
     let mut dial = leds::Dial::new(leds);
+    pca.set_pwm(&mut i2c1, pca::Led::All, 0x0FF, 0x000);
     // Loop forever
     loop {
-        let lsm::acc::AccData {y,..} = acc.read_sample(&mut i2c1).unwrap();
+        // let lsm::mag::MagData {y,..} = mag.read_sample(&mut i2c1).unwrap();
+        // cortex_m_semihosting::hprint!("{}", y);
+        // let magnitude = (y.abs() / 500).min(8);
+        // cortex_m_semihosting::hprintln!("{}:{}", magnitude, y.abs());
+        // dial.set_magnitude(magnitude as usize).unwrap();
         
-        let mag = y.abs() / 8192;
-        dial.set_magnitude(mag as usize).unwrap();
         
-        
-
+        for i in 0..=8 {
+            dial.set_magnitude(i).unwrap();
+            busy_wait(100);
+        }
+        for i in (0..=8).rev() {
+            dial.set_magnitude(i).unwrap();
+            busy_wait(100);
+        }
         // leds.blink(North, 1).unwrap();
         // leds.blink(NorthEast, 1).unwrap();
         // leds.blink(East, 1).unwrap();

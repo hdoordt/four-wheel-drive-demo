@@ -10,6 +10,7 @@ pub struct LSM303LDHC_ACC<TI2C: WriteRead + Write> {
 }
 
 #[derive(Clone, Debug)]
+#[repr(u8)]
 pub enum DataRate {
     PowerDown = 0b0000 << 4,
     Rate1hz = 0b0001 << 4,
@@ -19,8 +20,6 @@ pub enum DataRate {
     Rate100Hz = 0b0101 << 4,
     Rate200Hz = 0b0110 << 4,
     Rate400Hz = 0b0111 << 4,
-    LowPower = 0b1000 << 4,
-    Normal = 0b1001 << 4,
 }
 
 #[derive(Clone, Debug)]

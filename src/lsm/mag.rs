@@ -2,11 +2,24 @@ use core::convert::TryInto;
 use core::marker::PhantomData;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
 
-pub const LSM_MAG_I2C_ADDR: u8 = 0b0011110;
+pub const LSM_MAG_I2C_ADDR: u8 = 0b001_1110;
 
 #[allow(non_camel_case_types)]
 pub struct LSM303LDHC_MAG<TI2C> {
     phantom: PhantomData<TI2C>,
+}
+
+#[derive(Clone, Debug)]
+#[repr(u8)]
+pub enum DataRate {
+    Rate0_75hz = 0b000 << 2,
+    Rate1_5Hz = 0b001 << 2,
+    Rate3Hz = 0b010 << 2,
+    Rate7_5Hz = 0b011 << 2,
+    Rate15Hz = 0b100 << 2,
+    Rate30Hz = 0b101 << 2,
+    Rate75Hz = 0b110 << 2,
+    Rate220Hz = 0b111 << 2,
 }
 
 #[derive(Clone, Debug)]
@@ -20,9 +33,9 @@ pub struct MagData {
 pub struct TempData(pub i16);
 
 impl<TI2C: WriteRead + Write> LSM303LDHC_MAG<TI2C> {
-    pub fn init(i2c: &mut TI2C) -> Result<Self, <TI2C as Write>::Error> {
+    pub fn init(i2c: &mut TI2C, data_rate: DataRate) -> Result<Self, <TI2C as Write>::Error> {
         i2c.write(LSM_MAG_I2C_ADDR, &[register::MR_REG_M, 0x00])?;
-        i2c.write(LSM_MAG_I2C_ADDR, &[register::CRA_REG_M, 0x88])?;
+        i2c.write(LSM_MAG_I2C_ADDR, &[register::CRA_REG_M, data_rate as u8 | 0x80])?;
         Ok(Self {
             phantom: PhantomData,
         })
