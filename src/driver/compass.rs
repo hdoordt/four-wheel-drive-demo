@@ -1,17 +1,6 @@
 use stm32f3xx_hal::gpio::{gpioe::*, Output, PushPull};
 use stm32f3xx_hal::hal::digital::v2::OutputPin;
 
-pub struct Leds {
-    north_west: PE8<Output<PushPull>>,
-    north: PE9<Output<PushPull>>,
-    north_east: PE10<Output<PushPull>>,
-    east: PE11<Output<PushPull>>,
-    south_east: PE12<Output<PushPull>>,
-    south: PE13<Output<PushPull>>,
-    south_west: PE14<Output<PushPull>>,
-    west: PE15<Output<PushPull>>,
-}
-
 #[derive(Clone, Copy, Debug)]
 pub enum Led {
     NorthWest,
@@ -38,7 +27,19 @@ impl Led {
         ]
     }
 }
-impl Leds {
+
+pub struct Compass {
+    north_west: PE8<Output<PushPull>>,
+    north: PE9<Output<PushPull>>,
+    north_east: PE10<Output<PushPull>>,
+    east: PE11<Output<PushPull>>,
+    south_east: PE12<Output<PushPull>>,
+    south: PE13<Output<PushPull>>,
+    south_west: PE14<Output<PushPull>>,
+    west: PE15<Output<PushPull>>,
+}
+
+impl Compass {
     pub fn init(mut gpioe: Parts) -> Self {
         let north_west = gpioe
             .pe8
@@ -126,16 +127,16 @@ impl Leds {
 }
 
 pub struct Dial {
-    leds: Leds,
+    compass: Compass,
 }
 
 impl Dial {
-    pub fn new(leds: Leds) -> Self {
-        Self { leds }
+    pub fn new(compass: Compass) -> Self {
+        Self { compass }
     }
 
     pub fn reset(&mut self) -> Result<(), ()> {
-        self.leds.set_all_low()
+        self.compass.set_all_low()
     }
 
     pub fn set_magnitude(&mut self, mag: usize) -> Result<(), ()> {
@@ -144,7 +145,7 @@ impl Dial {
         Led::all()
             .iter()
             .take(mag)
-            .try_for_each(|l| self.leds.set_high(*l))
+            .try_for_each(|l| self.compass.set_high(*l))
     }
 }
 
