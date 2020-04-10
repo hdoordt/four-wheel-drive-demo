@@ -9,7 +9,10 @@ use cortex_m_rt::entry;
 
 use stm32f3xx_hal::prelude::*;
 mod driver;
+pub mod time;
 mod usart;
+mod dispatch;
+mod tasks;
 
 use driver::compass::Compass;
 
@@ -56,7 +59,7 @@ fn main() -> ! {
     let mut flash = peripherals.FLASH.constrain();
     let clocks = rcc.cfgr.freeze(&mut flash.acr);
 
-    let mut gpioa = peripherals.GPIOA.split(&mut rcc.ahb);
+    let gpioa = peripherals.GPIOA.split(&mut rcc.ahb);
     let mut gpiob = peripherals.GPIOB.split(&mut rcc.ahb);
     let gpioe = peripherals.GPIOE.split(&mut rcc.ahb);
 
@@ -65,26 +68,23 @@ fn main() -> ! {
     let sda = gpiob.pb7.into_af4(&mut gpiob.moder, &mut gpiob.afrl);
 
     compass.blink(North, 2).unwrap();
-    let mut _i2c1 = stm32f3xx_hal::i2c::I2c::i2c1(
+    let mut i2c1 = stm32f3xx_hal::i2c::I2c::i2c1(
         peripherals.I2C1,
         (scl, sda),
         400.khz(),
         clocks,
         &mut rcc.apb1,
     );
-
-    
+    let t = time::Time::init(peripherals.TIM7, clocks, &mut rcc.apb1);
     let mut dial = driver::compass::Dial::new(compass);
     
     // Loop forever
-    loop {        
-        for i in 0..=8 {
-            dial.set_magnitude(i).unwrap();
-            busy_wait(100);
-        }
-        for i in (0..=8).rev() {
-            dial.set_magnitude(i).unwrap();
-            busy_wait(100);
-        }
+    loop {
+        let d = time::Delay::new(1000, t);
+        nb::block!(d.poll(t));
+        dial.set_magnitude(8);
+        let d = time::Delay::new(1000, t);
+        nb::block!(d.poll(t));
+        dial.set_magnitude(1);
     }
 }

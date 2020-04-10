@@ -99,6 +99,7 @@ dependencies = [
 name = "four-wd-demo"
 version = "0.1.0"
 dependencies = [
+ "bare-metal",
  "cortex-m",
  "cortex-m-rt",
  "cortex-m-semihosting",
@@ -240,14 +241,15 @@ checksum = "8796d066c1bc4fe53cdff215fd3bd90e956520698c34c2bb674f87fe400f2fe8"
 dependencies = [
  "bare-metal",
  "cortex-m",
+ "cortex-m-rt",
  "vcell",
 ]
 
 [[package]]
 name = "stm32f3xx-hal"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cba268d4070e654f4e10f35d0cf27e8be5497ebef9a924d8ab8dae1e42d33b6"
+checksum = "3d88b2621d96b6583030c28092064a519651a97d3fa858096a0c6c62eebd4618"
 dependencies = [
  "bare-metal",
  "cast",

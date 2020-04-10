@@ -1,6 +1,16 @@
-use core::ops::{Deref, DerefMut};
 use stm32f3xx_hal::gpio::{gpioe::*, Output, PushPull};
 use stm32f3xx_hal::hal::digital::v2::OutputPin;
+
+pub struct Leds {
+    north_west: PE8<Output<PushPull>>,
+    north: PE9<Output<PushPull>>,
+    north_east: PE10<Output<PushPull>>,
+    east: PE11<Output<PushPull>>,
+    south_east: PE12<Output<PushPull>>,
+    south: PE13<Output<PushPull>>,
+    south_west: PE14<Output<PushPull>>,
+    west: PE15<Output<PushPull>>,
+}
 
 #[derive(Clone, Copy, Debug)]
 pub enum Led {
@@ -28,19 +38,7 @@ impl Led {
         ]
     }
 }
-
-pub struct Compass {
-    north_west: PE8<Output<PushPull>>,
-    north: PE9<Output<PushPull>>,
-    north_east: PE10<Output<PushPull>>,
-    east: PE11<Output<PushPull>>,
-    south_east: PE12<Output<PushPull>>,
-    south: PE13<Output<PushPull>>,
-    south_west: PE14<Output<PushPull>>,
-    west: PE15<Output<PushPull>>,
-}
-
-impl Compass {
+impl Leds {
     pub fn init(mut gpioe: Parts) -> Self {
         let north_west = gpioe
             .pe8
@@ -128,25 +126,22 @@ impl Compass {
 }
 
 pub struct Dial {
-    compass: Compass,
+    leds: Leds
 }
 
 impl Dial {
-    pub fn new(compass: Compass) -> Self {
-        Self { compass }
-    }
+    pub fn new(leds: Leds) -> Self {
+        Self { leds }
+    } 
 
-    pub fn reset(&mut self) -> Result<(), ()> {
-        self.compass.set_all_low()
+    pub fn reset(&mut self ) -> Result<(), ()> {
+        self.leds.set_all_low()
     }
 
     pub fn set_magnitude(&mut self, mag: usize) -> Result<(), ()> {
         debug_assert!(mag <= 8);
         self.reset()?;
-        Led::all()
-            .iter()
-            .take(mag)
-            .try_for_each(|l| self.compass.set_high(*l))
+        Led::all().iter().take(mag).try_for_each(|l| self.leds.set_high(*l))
     }
 }
 
@@ -158,17 +153,4 @@ fn blink_led(led: &mut impl OutputPin<Error = ()>, times: u16) -> Result<(), ()>
         crate::busy_wait(100);
     }
     Ok(())
-}
-
-impl Deref for Dial {
-    type Target = Compass;
-    fn deref(&self) -> &Self::Target {
-        &self.compass
-    }
-}
-
-impl DerefMut for Dial {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.compass
-    }
 }
