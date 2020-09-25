@@ -1,4 +1,3 @@
-use crate::sample_buffer::Sample;
 use core::convert::TryInto;
 use core::marker::PhantomData;
 use embedded_hal::blocking::i2c::{Write, WriteRead};
@@ -8,6 +7,13 @@ pub const LSM_ACC_I2C_ADDR: u8 = 0b0011001;
 #[allow(non_camel_case_types)]
 pub struct LSM303LDHC_ACC<TI2C> {
     phantom: PhantomData<TI2C>,
+}
+
+#[derive(Clone, Debug)]
+pub struct AccData {
+    pub x: i16,
+    pub y: i16,
+    pub z: i16,
 }
 
 #[derive(Clone, Debug)]
@@ -39,7 +45,7 @@ impl<TI2C: WriteRead + Write> LSM303LDHC_ACC<TI2C> {
         })
     }
 
-    pub fn read_sample(&mut self, i2c: &mut TI2C) -> Result<Sample, <TI2C as WriteRead>::Error> {
+    pub fn read_sample(&mut self, i2c: &mut TI2C) -> Result<AccData, <TI2C as WriteRead>::Error> {
         use register::OUT_X_L_A;
 
         let mut buf = [0u8; 6];
@@ -51,45 +57,8 @@ impl<TI2C: WriteRead + Write> LSM303LDHC_ACC<TI2C> {
         let y = i16::from_le_bytes(buf[2..=3].try_into().unwrap());
         let z = i16::from_le_bytes(buf[4..=5].try_into().unwrap());
 
-        Ok(Sample { x, y, z })
+        Ok(AccData { x, y, z })
     }
-    /*
-    pub fn read_sample(&mut self, i2c: &mut TI2C) -> Result<Sample, <TI2C as WriteRead>::Error> {
-        use register::OUT_X_L_A;
-        use register::OUT_Y_L_A;
-        use register::OUT_Z_L_A;
-
-        use register::OUT_X_H_A;
-        use register::OUT_Y_H_A;
-        use register::OUT_Z_H_A;
-
-        let mut buf_x_l = [0u8; 1];
-        let mut buf_y_l = [0u8; 1];
-        let mut buf_z_l = [0u8; 1];
-
-        let mut buf_x_h = [0u8; 1];
-        let mut buf_y_h = [0u8; 1];
-        let mut buf_z_h = [0u8; 1];
-
-        i2c.write_read(LSM_ACC_I2C_ADDR, &[OUT_X_L_A], &mut buf_x_l)?;
-        i2c.write_read(LSM_ACC_I2C_ADDR, &[OUT_Y_L_A], &mut buf_y_l)?;
-        i2c.write_read(LSM_ACC_I2C_ADDR, &[OUT_Z_L_A], &mut buf_z_l)?;
-
-        i2c.write_read(LSM_ACC_I2C_ADDR, &[OUT_X_H_A], &mut buf_x_h)?;
-        i2c.write_read(LSM_ACC_I2C_ADDR, &[OUT_Y_H_A], &mut buf_y_h)?;
-        i2c.write_read(LSM_ACC_I2C_ADDR, &[OUT_Z_H_A], &mut buf_z_h)?;
-
-        let buf_x = [buf_x_l[0], buf_x_h[0]];
-        let buf_y = [buf_y_l[0], buf_y_h[0]];
-        let buf_z = [buf_z_l[0], buf_z_h[0]];
-
-        let x = i16::from_le_bytes(buf_x);
-        let y = i16::from_le_bytes(buf_y);
-        let z = i16::from_le_bytes(buf_z);
-
-        Ok(Sample { x, y, z })
-    }
-    */
 }
 
 #[allow(dead_code)]

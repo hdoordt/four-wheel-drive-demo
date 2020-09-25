@@ -10,20 +10,14 @@ use cortex_m_rt::entry;
 use stm32f3xx_hal::prelude::*;
 //use stm32f3xx_hal::stm32;
 
-mod dispatch;
 mod driver;
-mod sample_buffer;
-mod tasks;
-pub mod time;
+mod time;
 mod usart;
 
 use embedded_hal::blocking::i2c::{Write as HalWrite, WriteRead as HalWriteRead};
 
 use driver::compass::Compass;
 use driver::motor::Motors;
-use sample_buffer::{Sample, SampleBuffer};
-
-const SAMPLES_TO_CHECK: u8 = 5;
 
 // A panic handler is run when the application encounters an error
 // it cannot recover from. The handler defines what it should do
@@ -71,161 +65,65 @@ fn main() -> ! {
     let mut gpiob = peripherals.GPIOB.split(&mut rcc.ahb);
     let gpioe = peripherals.GPIOE.split(&mut rcc.ahb);
 
+    // Init the compass using the GPIOE block
     let mut compass = Compass::init(gpioe);
-    let scl = gpiob.pb6.into_af4(&mut gpiob.moder, &mut gpiob.afrl);
-    let sda = gpiob.pb7.into_af4(&mut gpiob.moder, &mut gpiob.afrl);
 
-    let usart1_txd = gpioa.pa9.into_af7(&mut gpioa.moder, &mut gpioa.afrh);
-    let usart1_rxd = gpioa.pa10.into_af7(&mut gpioa.moder, &mut gpioa.afrh);
+    // // Configure USART pins
+    // let usart1_txd = gpioa.pa9.into_af7(&mut gpioa.moder, &mut gpioa.afrh);
+    // let usart1_rxd = gpioa.pa10.into_af7(&mut gpioa.moder, &mut gpioa.afrh);
 
-    let usart1 = stm32f3xx_hal::serial::Serial::usart1(
-        peripherals.USART1,
-        (usart1_txd, usart1_rxd),
-        9600.bps(),
-        clocks,
-        &mut rcc.apb2,
-    );
+    // // Configure USART1 peripheral
+    // let usart1 = stm32f3xx_hal::serial::Serial::usart1(
+    //     peripherals.USART1,
+    //     (usart1_txd, usart1_rxd),
+    //     9600.bps(),
+    //     clocks,
+    //     &mut rcc.apb2,
+    // );
 
-    let (usart1_tx, mut _usart1_rx) = usart1.split();
+    // // Split USART1 peripheral in transmitter and receiver
+    // let (usart1_tx, mut _usart1_rx) = usart1.split();
+    // // Create wrapper around USART transmitter for ease of use
+    // let mut usart = usart::UsartWrite::init(usart1_tx);
 
-    let mut us = usart::UsartWrite::init(usart1_tx);
+    // // Blink North LED on compass to show that we've come this far
+    // compass.blink(North, 2).unwrap();
 
-    compass.blink(North, 2).unwrap();
-    let mut i2c1 = stm32f3xx_hal::i2c::I2c::i2c1(
-        peripherals.I2C1,
-        (scl, sda),
-        400.khz(),
-        clocks,
-        &mut rcc.apb1,
-    );
+    // // Configure I2C pins
+    // let scl = gpiob.pb6.into_af4(&mut gpiob.moder, &mut gpiob.afrl);
+    // let sda = gpiob.pb7.into_af4(&mut gpiob.moder, &mut gpiob.afrl);
 
-    let pca = driver::pca::PCA9685::init(&mut i2c1).unwrap();
-    let mut motors = Motors::init(pca, &mut i2c1).unwrap();
+    // // Configure I2C1 peripherals
+    // let mut i2c1 = stm32f3xx_hal::i2c::I2c::i2c1(
+    //     peripherals.I2C1,
+    //     (scl, sda),
+    //     400.khz(),
+    //     clocks,
+    //     &mut rcc.apb1,
+    // );
 
-    let mut mag =
-        driver::lsm::mag::LSM303LDHC_MAG::init(&mut i2c1, driver::lsm::mag::DataRate::Rate220Hz)
-            .unwrap();
+    // // Initialize PCA9685 PWM driver using the I2C1 peripheral
+    // let pca = driver::pca::PCA9685::init(&mut i2c1).unwrap();
 
-    let mut acc =
-        driver::lsm::acc::LSM303LDHC_ACC::init(&mut i2c1, driver::lsm::acc::DataRate::Rate400Hz)
-            .unwrap();
-    let t = time::Time::init(peripherals.TIM7, clocks, &mut rcc.apb1);
-    //let mut dial = driver::compass::Dial::new(compass);
+    // // Initialize the Motors wrapper around the PWM driver to ease controlling the motors
+    // let mut motors = Motors::init(pca, &mut i2c1).unwrap();
 
-    let mut acc_samples = SampleBuffer::new();
+    // // Inititialize the LSM303LDHC magnetometor driver using the I2C1 peripheral
+    // let mut mag =
+    //     driver::lsm::mag::LSM303LDHC_MAG::init(&mut i2c1, driver::lsm::mag::DataRate::Rate220Hz)
+    //         .unwrap();
 
-    let mut forward = true;
-    compass.set_direction(driver::compass::Led::North).unwrap();
+    // // Inititialize the LSM303LDHC accelerometer driver using the I2C1 peripheral
+    // let mut acc =
+    //     driver::lsm::acc::LSM303LDHC_ACC::init(&mut i2c1, driver::lsm::acc::DataRate::Rate400Hz)
+    //         .unwrap();
 
     // Loop forever
     loop {
-        //let mag_sample = mag.read_sample(&mut i2c1);
-        let acc_sample = acc.read_sample(&mut i2c1).unwrap();
-
-        uprintln!(&mut us, "{:?}", acc_sample);
-
-        let collision_result = has_collided(&acc_sample, &acc_samples.mean_sample());
-        if collision_result.0 {
-            uprintln!(
-                &mut us,
-                "Collision! x: {}, y: {}, z: {}",
-                collision_result.1.x,
-                collision_result.1.y,
-                collision_result.1.z
-            );
-
-            // Reverse
-            forward = !forward;
-
-            //dial.set_magnitude(4).unwrap();
-            compass.set_all_high().unwrap();
-            stop(&mut i2c1, &mut motors);
-
-            let d = time::Delay::new(1000, t);
-            nb::block!(d.poll(t)).unwrap();
-
-            if forward {
-                go_forward(&mut i2c1, &mut motors, 0xFFF);
-                compass.set_direction(driver::compass::Led::North).unwrap();
-            } else {
-                go_backward(&mut i2c1, &mut motors, 0xFFF);
-                compass.set_direction(driver::compass::Led::South).unwrap();
-            }
-        }
-
-        acc_samples.push(acc_sample);
+        // TODO: Do something cool with the provided hardware
+        compass.set_all_high().unwrap();
+        busy_wait(500);
+        compass.set_all_low().unwrap();
+        busy_wait(500);
     }
-}
-
-fn has_collided(a: &Sample, b: &Sample) -> (bool, Sample) {
-    let threshold = 10_000;
-
-    let diff_sample = Sample {
-        x: a.x - b.x,
-        y: a.y - b.y,
-        z: a.z - b.z,
-    };
-
-    (
-        diff_sample.x > threshold || diff_sample.y > threshold || diff_sample.z > threshold,
-        diff_sample,
-    )
-}
-
-fn go_forward<TI2C: HalWrite + HalWriteRead>(
-    i2c1: &mut TI2C,
-    motors: &mut Motors<TI2C>,
-    speed: u16,
-) {
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::flf(),
-        speed,
-    );
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::rlf(),
-        speed,
-    );
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::frf(),
-        speed,
-    );
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::rrf(),
-        speed,
-    );
-}
-
-fn go_backward<TI2C: HalWrite + HalWriteRead>(
-    i2c1: &mut TI2C,
-    motors: &mut Motors<TI2C>,
-    speed: u16,
-) {
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::flb(),
-        speed,
-    );
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::rlb(),
-        speed,
-    );
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::frb(),
-        speed,
-    );
-    let _ = motors.set_motor_speed(
-        i2c1,
-        &driver::motor::motor_direction::MotorDirection::rrb(),
-        speed,
-    );
-}
-
-fn stop<TI2C: HalWrite + HalWriteRead>(i2c1: &mut TI2C, motors: &mut Motors<TI2C>) {
-    let _ = motors.all_off(i2c1);
 }
