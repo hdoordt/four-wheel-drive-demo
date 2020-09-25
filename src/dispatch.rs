@@ -4,8 +4,7 @@ use crate::driver::compass::Dial;
 use crate::driver::lsm::{acc, mag};
 use crate::driver::motor;
 use crate::driver::pca;
-use crate::time::{Delay, Time};
-use crate::tasks::prelude::*;
+use crate::time::{Time};
 
 pub struct Context<TI2C> {
     time: Time,

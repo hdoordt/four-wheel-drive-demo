@@ -123,20 +123,41 @@ pub mod motor_direction {
 
     impl From<MotorDirection> for pca::Led {
         fn from(motor_dir: MotorDirection) -> Self {
-            use pca::Led::*;
+            use crate::driver::pca::Led::*;
             use Direction::*;
             use Motor::*;
             let MotorDirection { motor, dir } = motor_dir;
             match (motor, dir) {
-                (FrontLeft, Forward) => Led0,
-                (FrontLeft, Backward) => Led1,
-                (FrontRight, Forward) => Led7,
-                (FrontRight, Backward) => Led6,
-                (RearLeft, Forward) => Led2,
-                (RearLeft, Backward) => Led3,
-                (RearRight, Forward) => Led4,
-                (RearRight, Backward) => Led5,
+                (FrontLeft, Forward) => Led2,
+                (FrontLeft, Backward) => Led3,
+                (FrontRight, Forward) => Led0,
+                (FrontRight, Backward) => Led1,
+                (RearLeft, Forward) => Led4,
+                (RearLeft, Backward) => Led5,
+                (RearRight, Forward) => Led7,
+                (RearRight, Backward) => Led6,
             }
         }
     }
+
+    /* NOTE: Black swag mobiel mapping
+        impl From<MotorDirection> for pca::Led {
+        fn from(motor_dir: MotorDirection) -> Self {
+        use crate::driver::pca::Led::*;
+        use Direction::*;
+        use Motor::*;
+        let MotorDirection { motor, dir } = motor_dir;
+        match (motor, dir) {
+        (FrontLeft, Forward) => Led0,
+        (FrontLeft, Backward) => Led1,
+        (FrontRight, Forward) => Led7,
+        (FrontRight, Backward) => Led6,
+        (RearLeft, Forward) => Led2,
+        (RearLeft, Backward) => Led3,
+        (RearRight, Forward) => Led4,
+        (RearRight, Backward) => Led5,
+    }
+    }
+    }
+         */
 }

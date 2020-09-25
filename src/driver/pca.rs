@@ -34,7 +34,6 @@ pub enum Led {
 impl<TI2C: Write + WriteRead> PCA9685<TI2C> {
     pub fn init(i2c: &mut TI2C) -> Result<Self, <TI2C as Write>::Error> {
         i2c.write(PCA_I2C_ADDR, &[register::MODE1, 0b00100001])?;
-
         Ok(Self {
             phantom: PhantomData,
         })
@@ -58,13 +57,13 @@ impl<TI2C: Write + WriteRead> PCA9685<TI2C> {
         on: u16,
         off: u16,
     ) -> Result<(), <TI2C as Write>::Error> {
-        debug_assert!(off < 0x0FFF);
-        debug_assert!(on < 0x0FFF);
+        debug_assert!(off <= 0x0FFF);
+        debug_assert!(on <= 0x0FFF);
 
-        let on_l = off as u8;
-        let on_h = (off >> 8) as u8;
-        let off_l = on as u8;
-        let off_h = (on >> 8) as u8;
+        let on_l = on as u8;
+        let on_h = (on >> 8) as u8;
+        let off_l = off as u8;
+        let off_h = (off >> 8) as u8;
 
         i2c.write(PCA_I2C_ADDR, &[*led as u8, on_l, on_h, off_l, off_h])
     }
@@ -116,9 +115,9 @@ pub mod register {
     pub const LED6_OFF_L: u8 = 0x20;
     pub const LED6_OFF_H: u8 = 0x21;
 
-    pub const LED7_ON_L: u8 = 0x22;
-    pub const LED7_ON_H: u8 = 0x23;
-    pub const LED7_OFF_L: u8 = 0x24;
+    pub const LED7_ON_L: u8 = 0x22; // 0xFF
+    pub const LED7_ON_H: u8 = 0x23; // 0x0F
+    pub const LED7_OFF_L: u8 = 0x24; // 0x000
     pub const LED7_OFF_H: u8 = 0x25;
 
     pub const LED8_ON_L: u8 = 0x26;

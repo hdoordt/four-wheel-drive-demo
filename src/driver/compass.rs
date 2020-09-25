@@ -113,6 +113,11 @@ impl Compass {
         }
     }
 
+    pub fn set_direction(&mut self, led: Led) -> Result<(), ()> {
+        self.set_all_low()?;
+        self.set_high(led)
+    }
+
     pub fn blink(&mut self, led: Led, times: u16) -> Result<(), ()> {
         match led {
             Led::NorthWest => blink_led(&mut self.north_west, times),

@@ -85,6 +85,7 @@ impl Interval{
         }
     }
 
+    #[allow(unused_variables)]
     pub fn poll(&self, time: Time) -> nb::Result<bool, core::convert::Infallible> {
         todo!()
     }
